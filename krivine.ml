@@ -34,7 +34,7 @@ type expr =
                (**)
   | Project of (int*int) * expr
 
-type  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list)
+type  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list) | Tunit
 
 
 type closure = Clos of (expr * table) | Tclos of (closure list)

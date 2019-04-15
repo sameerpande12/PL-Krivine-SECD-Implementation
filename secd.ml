@@ -10,7 +10,7 @@ type expr =
   | Bool of bool
   | Integer of int
   (**)
-  | Lambda of (expr * expr)
+  | Lambda of ((expr * exptype) * expr)
   | App of (expr * expr)
   (**)
   | Plus of (expr * expr)
@@ -44,7 +44,10 @@ type expr =
 
 and definition =
     Simple of (string* exptype)* expr
-and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list)
+    | Sequence of (definition list)
+    | Parallel of (definition list)
+    | Local of definition * definition
+and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list) | Tunit
 
 
 
@@ -80,10 +83,11 @@ let rec compile ex = match ex with
   |Project((i,n),e)-> compile(e)@[PROJ(i,n)]
   |Tuple(n,elist)->let fn a b = (compile a) @ b in
     (List.fold_right fn (List.rev elist) [])@[TUPLE(n)]
-  |Lambda(V(x),e)-> [FABS(x,(compile(e))@[RETURN])]
+  |Lambda((V(x),t),e)-> [FABS(x,(compile(e))@[RETURN])]
   |App(e1,e2)-> (compile e1)@ (compile e2)@[FCALL]
   | Let(Simple((x,t),e1),e)-> (compile e1)@ [BIND(x,t)] @ (compile e) @ [LET]
   | Lambda(_,e)-> raise Invalid_Parameter
+  | Let(_,e)-> raise Invalid_Parameter
 
 let rec getFirstn mlist n =
   if n = 0 then []
