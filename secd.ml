@@ -112,8 +112,10 @@ let rec getFromTable x e = match e with
 let rec runSECD stack env opc dump =
   match (stack,env,opc,dump) with
     ( cl::s, e, [], (s1,e1,c1)::d) -> runSECD (cl::s1) e1 c1 d (*http://www.cse.iitd.ernet.in/~sak/courses/pl/opsem.pdf rules used from here*)
+  | (cl::s,e,[],[])-> cl
+  | ([],e,[],(s1,e1,c1)::d)-> runSECD s1 e1 c1 d
   | (s,e,VAR(x)::c,d)-> runSECD ((getFromTable x e)::s) e c d
-  | (s,e,(FABS(x,c))::c1,d)-> runSECD ((VClos((x,c),e))::s) e c1 d
+  | (s,e,(FABS(x,c))::c1,d)->  runSECD ((VClos((x,c),e))::s) e c1 d
   | (a::s,e, RETURN::c, (s1,e1,c1)::d)-> runSECD (a::s1) e1 c1 d
   | (a::VClos((x,c),e)::s,e1,FCALL::c1,d) -> runSECD [] ((x,a)::e) c ((s,e1,c1)::d)
 
@@ -140,5 +142,6 @@ let rec runSECD stack env opc dump =
   |  (s,e,TUPLE(n)::c,d) ->  runSECD  ((Tup(n, getFirstn s n))::(removeFirstn s n)) e c d
   |  (Tup(_,alist)::s,e,PROJ(i,n)::c,d)-> runSECD ((List.nth alist (i-1) )::s) e c d
   |  (a::s,e, BIND(x,t)::c, d) ->  runSECD s ((x,a)::e)  c  d
-  |  (s,e1::e, LET::c,d) -> runSECD s e (LET::c) d
+  |  (s,e1::e, LET::c,d) -> runSECD s e (c) d
   | _ -> raise MachineStuck
+let getAnswer ex tab = runSECD [] tab (compile ex) []

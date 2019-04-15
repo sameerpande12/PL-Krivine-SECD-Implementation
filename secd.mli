@@ -58,4 +58,4 @@ val removeFirstn : 'a list -> int -> 'a list
 val getFromTable : 'a -> ('a * 'b) list -> 'b
 val runSECD :
   answer list ->
-  table -> opcode list -> (answer list * table * opcode list) list -> 'a
+  table -> opcode list -> (answer list * table * opcode list) list -> answer
