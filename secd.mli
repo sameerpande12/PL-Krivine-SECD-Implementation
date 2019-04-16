@@ -1,4 +1,5 @@
 open A0
+
 type expr =
     V of string
   | Bool of bool
@@ -35,22 +36,24 @@ type expr =
   (**)
   | Project of (int*int) * (expr)
   | Let of definition * expr
-
+  | RLambda of (string * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
 and definition =
     Simple of (string* exptype)* expr
   | Sequence of (definition list)
   | Parallel of (definition list)
   | Local of definition * definition
+
 and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list) | Tunit
 
 
 
-type answer = B of bool | Num of bigint | Tup of int * (answer list) | VClos of ( ( string* (opcode list)) * table )
+type answer = B of bool | Num of bigint | Tup of int * (answer list) | VClos of ( ( string* (opcode list)) * table ) | RClos of (string* ( string* (opcode list)) * table ) (*| RClos of (string* (string* (opcode list)* table)) *)
 and table = (string * answer) list
 and opcode = VAR of string | NCONST of bigint | BCONST of bool | ABS | UNARYMINUS | NOT
            | PLUS | MINUS | MULT | DIV | REM | CONJ | DISJ | EQS | GTE | LTE | GT | LT | CMP
            | PAREN | COND of (opcode list * opcode list) | TUPLE of int | PROJ of int*int | LET  | FABS of string * (opcode list) | FCALL | RETURN | BIND of (string * exptype)
-           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF
+           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list))
+
 
 val compile : expr -> opcode list
 val getFirstn : 'a list -> int -> 'a list

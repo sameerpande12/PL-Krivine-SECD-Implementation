@@ -41,22 +41,23 @@ type expr =
   (**)
   | Project of (int*int) * (expr)
   | Let of definition * expr
-
+  | RLambda of (string * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
 and definition =
     Simple of (string* exptype)* expr
     | Sequence of (definition list)
     | Parallel of (definition list)
     | Local of definition * definition
+
 and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype list) | Tunit
 
 
 
-type answer = B of bool | Num of bigint | Tup of int * (answer list) | VClos of ( ( string* (opcode list)) * table )
+type answer = B of bool | Num of bigint | Tup of int * (answer list) | VClos of ( ( string* (opcode list)) * table ) | RClos of ( string *( string* (opcode list)) * table ) (*| RClos of (string* (string* (opcode list)* table)) *)
 and table = (string * answer) list
 and opcode = VAR of string | NCONST of bigint | BCONST of bool | ABS | UNARYMINUS | NOT
             | PLUS | MINUS | MULT | DIV | REM | CONJ | DISJ | EQS | GTE | LTE | GT | LT | CMP
            | PAREN | COND of (opcode list * opcode list) | TUPLE of int | PROJ of int*int | LET  | FABS of string * (opcode list) | FCALL | RETURN | BIND of (string * exptype)
-            | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF
+           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list))
 
 let rec compile ex = match ex with
     Bool(b)-> [BCONST(b)]
@@ -84,9 +85,12 @@ let rec compile ex = match ex with
   |Tuple(n,elist)->let fn a b = (compile a) @ b in
     (List.fold_right fn (List.rev elist) [])@[TUPLE(n)]
   |Lambda((V(x),t),e)-> [FABS(x,(compile(e))@[RETURN])]
+  | RLambda(fname,(V(x),t),e)->[RABS(fname,(x,compile(e)@[RETURN])  )]
+                          (*|RecursiveAbs(fname,t,e) -> [RABS(fname,compile(e))]*)
   |App(e1,e2)-> (compile e1)@ (compile e2)@[FCALL]
   | Let(Simple((x,t),e1),e)-> (compile e1)@ [BIND(x,t)] @ (compile e) @ [LET]
   | Lambda(_,e)-> raise Invalid_Parameter
+  | RLambda(_,_,e)-> raise Invalid_Parameter
   | Let(_,e)-> raise Invalid_Parameter
 
 let rec getFirstn mlist n =
@@ -114,10 +118,13 @@ let rec runSECD stack env opc dump =
     ( cl::s, e, [], (s1,e1,c1)::d) -> runSECD (cl::s1) e1 c1 d (*http://www.cse.iitd.ernet.in/~sak/courses/pl/opsem.pdf rules used from here*)
   | (cl::s,e,[],[])-> cl
   | ([],e,[],(s1,e1,c1)::d)-> runSECD s1 e1 c1 d
-  | (s,e,VAR(x)::c,d)-> runSECD ((getFromTable x e)::s) e c d
+  | (s,e,VAR(x)::c,d)->
+        runSECD ((getFromTable x e)::s) e c d
   | (s,e,(FABS(x,c))::c1,d)->  runSECD ((VClos((x,c),e))::s) e c1 d
+  | (s,e, (RABS(fname,(x,c)))::c1, d ) -> runSECD (RClos(fname,(x,c),e)::s) ((fname,RClos(fname,(x,c),e))::e)  c1 d
   | (a::s,e, RETURN::c, (s1,e1,c1)::d)-> runSECD (a::s1) e1 c1 d
   | (a::VClos((x,c),e)::s,e1,FCALL::c1,d) -> runSECD [] ((x,a)::e) c ((s,e1,c1)::d)
+  | (a::RClos(fname,(x,c),e)::s, e1, FCALL::c1,d) -> runSECD [] ((x,a)::(fname,RClos(fname,(x,c),e))::e) c ((s,e1,c1)::d)
 
   | (s,e, BCONST(b)::c,d) -> runSECD (B(b)::s)  e c d
   | (s,e, NCONST(n)::c, d)-> runSECD (Num(n)::s) e c d
@@ -143,5 +150,7 @@ let rec runSECD stack env opc dump =
   |  (Tup(_,alist)::s,e,PROJ(i,n)::c,d)-> runSECD ((List.nth alist (i-1) )::s) e c d
   |  (a::s,e, BIND(x,t)::c, d) ->  runSECD s ((x,a)::e)  c  d
   |  (s,e1::e, LET::c,d) -> runSECD s e (c) d
+
+
   | _ -> raise MachineStuck
 let getAnswer ex tab = runSECD [] tab (compile ex) []

@@ -73,3 +73,4 @@ let g_dash = [("U", Tint); ("V", Tbool)];;
 let parse s = exp_parser s rho;;
 let srd myv = A2.read (Lexing.from_string myv);;
 *)
+let e1= exp_parser " (rec(Fib)->X:Tint.(if (X=0) \\/ (X = 1) then X else Fib(X-1) + Fib(X-2) fi )) " rho
