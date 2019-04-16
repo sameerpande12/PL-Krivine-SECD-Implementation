@@ -13,12 +13,12 @@
 %token <int> INT
 %token <bool> BOOL
 %token <string> ID
-%token ABS TILDA NOT PLUS MINUS TIMES DIV REM CONJ DISJ EQ GT LT LP RP IF THEN ELSE FI COMMA PROJ CMP
+%token ABS TILDA NOT PLUS MINUS TIMES DIV REM CONJ DISJ EQ GT LT LP RP IF THEN ELSE FI COMMA PROJ CMP REC
 LET IN END BACKSLASH DOT DEF SEMICOLON PARALLEL LOCAL EOF  COLON ITYPE BTYPE UTYPE TUPTYPE FUNCTYPE/*added COLON token*/
 %start type_parser def_parser exp_parser
-%type <Secd.definition> def_parser /* Returns definitions */
-%type <Secd.expr> exp_parser /* Returns expression */
-%type <Secd.exptype> type_parser/* Returns exptype */
+%type <Krivine.definition> def_parser /* Returns definitions */
+%type <Krivine.expr> exp_parser /* Returns expression */
+%type <Krivine.exptype> type_parser/* Returns exptype */
 %%
 /* The grammars written below are dummy. Please rewrite it as per the specifications. */
 
@@ -68,7 +68,8 @@ abs_negative_expression:
 ;
 
 func_expression:
-  BACKSLASH ID COLON types DOT ifte_expression  {Lambda((V($2),$4),$6)}/*func_expression placed here to account for cases \\X.(X,Y). If it were kept tighest just before paren_expression then \\X.((X,Y)) would have been requrired*/
+    REC LP ID RP  MINUS GT ID COLON types DOT ifte_expression {RLambda($3,(V($7),$9),$11)}
+  | BACKSLASH ID COLON types DOT ifte_expression  {Lambda((V($2),$4),$6)}/*func_expression placed here to account for cases \\X.(X,Y). If it were kept tighest just before paren_expression then \\X.((X,Y)) would have been requrired*/
   | func_expression LP or_expression RP {App($1,$3)}/*for nested function calls such as \X.\Y.Z etc. you must parenthesize the body else it won't work*/
   | LET defns IN or_expression END {Let($2,$4)}
   | ifte_expression {$1}

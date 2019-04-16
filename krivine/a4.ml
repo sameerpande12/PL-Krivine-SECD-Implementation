@@ -1,4 +1,4 @@
-open Secd
+open Krivine
 exception Not_implemented
 exception TypeException
 exception IntersectionException

@@ -58,6 +58,7 @@ let parallel = "||"
 let endStr = "end"
 let dot ='.'
 let backslash = '\\'
+let recursive = "rec"
 
 let colon = ":"
 let letStr = "let"
@@ -80,6 +81,7 @@ eof                { EOF }
     | ttuple                {TUPTYPE}
     | cmp           {CMP}
 
+    | recursive      {REC}
 
     | integers as n  { INT (int_of_string n) }
     | plus              { PLUS }

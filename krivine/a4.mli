@@ -1,4 +1,4 @@
-open Secd
+open Krivine
 
 (* Function 'hastype' takes a set of type assumptions G represented as a list
 of tuples of form (variable name, type), an expression and an expression
