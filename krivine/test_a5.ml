@@ -26,7 +26,7 @@ let ten = exp_parser "10" ;;
 let seven = exp_parser "7" ;;
 let solve x = getAnswer (exp_parser x ) env;;
 
-(* Sample test case *)
+
 let e = (exp_parser "\\X:Tint.Y" );;
 let t = Tfunc (Tint, Tbool);;
 hastype g e t;;
@@ -38,8 +38,8 @@ hastype g e Tint;;
 hastype g e Tbool;;
 
 
-let s6 = "\\X:(Tint).(let def A:Tint = X+1 in let def B:Tint = X+3 in if cmp X then A + B else A -B fi end end)"
-let e6 = exp_parser s6 ;;
+let s1 = "\\X:(Tint).(let def A:Tint = X+1 in let def B:Tint = X+3 in if cmp X then A + B else A -B fi end end)"
+let e1 = exp_parser s6 ;;
 hastype g (App(e6,ten)) Tbool;;
 hastype g (App(e6,ten)) Tint;;
 getAnswer (App(e6,ten)) env;;

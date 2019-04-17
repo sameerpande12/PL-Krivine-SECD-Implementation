@@ -62,3 +62,4 @@ val getFromTable : 'a -> ('a * 'b) list -> 'b
 val runSECD :
   answer list ->
   table -> opcode list -> (answer list * table * opcode list) list -> answer
+val getAnswer: expr -> table -> answer
