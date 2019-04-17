@@ -100,6 +100,9 @@ let rec getType g e  = match e with
   | Lambda((V(x),xtype),e1)->(*assuming x is already added to the table g*)
 
     Tfunc( xtype , getType ((x,xtype)::g) e1)
+  | RLambda((fname,retType),(V(x),xtype),e1)->
+    
+    Tfunc(xtype,   getType   ((fname,Tfunc(xtype,retType))::(x,xtype)::g) e1 )
 
   | App(e1,e2) ->
     let type1 = getType g e1 in

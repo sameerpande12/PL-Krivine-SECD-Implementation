@@ -4,11 +4,11 @@
 #load "a3.cmo";;
 #load "a4.cmo";;
 
-#use "a0.ml";;
-#use "krivine.ml";;
-#use "a2.ml";;
-#use "a3.ml";;
-#use "a4.ml";;
+open A0;;
+open Krivine;;
+open A2;;
+open A3;;
+open A4;;
 
 exception Not_implemented
     (*  (* Helper function to print *)
@@ -85,28 +85,20 @@ get (App(e6,ten));;
 
 
 
-let s1= " rec(Fib)->X:Tint.(if (X=0) \\/ (X = 1) then X else Fib(X-1) + Fib(X-2) fi ) "
-let e1= exp_parser s1 rho
+let s1= " rec(Fib:Tint)->X:Tint.(if (X=0) \\/ (X = 1) then X else Fib(X-1) + Fib(X-2) fi ) "
+let fib= exp_parser s1 rho
 
-let s2 = " rec(Gcd)->Y:(Tint*Tint).(let def A:Tint = proj(1,2)Y in let def B:Tint = proj(2,2)Y in if (B = 0)then A else Gcd((B, A mod B)) fi end end )"
-let e2 = exp_parser s2 rho
+let s2 = " rec(Gcd:Tint)->Y:(Tint*Tint).(let def A:Tint = proj(1,2)Y in let def B:Tint = proj(2,2)Y in if (B = 0)then A else Gcd((B, A mod B)) fi end end )"
+let gcd = exp_parser s2 rho
 
 
-let exp = exp_parser "(1,(2,3))" rho;;
-runKrivine (Clos(exp,[])) [];;
-(*
-solve "(1,2,3)";;
-solve "(1,(2,3))";;
-solve " proj(1,2)(3,4)";;
-solve " proj(1,2)if 3 > 0 then (3,4) else (5,6) fi";;
-*)
 
 
 
 
 let s3 = "(4,0)";;
 let e3 = exp_parser s3 rho;;
-get (App(e2,e3));;
+get (App(gcd,e3));;
 
 
 

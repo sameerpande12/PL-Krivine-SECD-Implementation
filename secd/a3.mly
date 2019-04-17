@@ -68,7 +68,7 @@ abs_negative_expression:
 ;
 
 func_expression:
-    REC LP ID RP  MINUS GT ID COLON types DOT ifte_expression {RLambda($3,(V($7),$9),$11)}
+    REC LP ID COLON types RP  MINUS GT ID COLON types DOT ifte_expression {RLambda( ($3,$5),(V($9),$11),$13)}
   | BACKSLASH ID COLON types DOT ifte_expression  {Lambda((V($2),$4),$6)}/*func_expression placed here to account for cases \\X.(X,Y). If it were kept tighest just before paren_expression then \\X.((X,Y)) would have been requrired*/
   | func_expression LP or_expression RP {App($1,$3)}/*for nested function calls such as \X.\Y.Z etc. you must parenthesize the body else it won't work*/
   | LET defns IN or_expression END {Let($2,$4)}

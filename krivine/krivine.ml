@@ -42,7 +42,7 @@ type expr =
   (**)
   | Project of (int*int) * (expr)
   | Let of definition * expr
-  | RLambda of (string * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
+  | RLambda of ( (string * exptype) * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
 and definition =
     Simple of (string* exptype)* expr
   | Sequence of (definition list)
@@ -74,7 +74,7 @@ let rec getVarFromTable (x:string) gamma =
   (*Printf.printf "Searching %s " x ;*)
   match gamma with
     [] -> raise ElementNotFoundException
-  | g1::g2 -> (*Printf.printf "Iter %s "*) (fst g1);if (fst g1) = x then snd g1 else getVarFromTable x g2
+  | g1::g2 -> if (fst g1) = x then snd g1 else getVarFromTable x g2
 
 let getExp clos = match clos with
     Clos(exp, gamma) -> gamma
@@ -98,10 +98,10 @@ let rec runKrivine clos stack =  match clos with
     (*Printf.printf "4\n";*)
     runKrivine (Clos(e1,gamma))  (LET(x,e,gamma)::UNBIND::stack)
 
-  | Clos (RLambda(fname ,(V(x),t),e),gamma)->
+  | Clos (RLambda( (fname,t1) ,(V(x),t),e),gamma)->
     begin
       match stack with
-        [] -> (*Printf.printf "5\n";*) Clos(RLambda(fname ,(V(x),t),e),(fname,clos)::gamma)
+        [] -> (*Printf.printf "5\n";*) Clos(RLambda( (fname,t1) ,(V(x),t),e),(fname,clos)::gamma)
       | CLOSURE(clos1)::stack1 -> (*Printf.printf "6\n";*)runKrivine (Clos(e, (fname,clos)::(x,clos1)::gamma))  stack1
 
       | (TUP( r_completed, current::(rem1::rem2)))::stack1 ->(*current is the closure which when run on the krivine machine gave clos*)

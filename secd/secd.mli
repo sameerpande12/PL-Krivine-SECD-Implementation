@@ -36,7 +36,7 @@ type expr =
   (**)
   | Project of (int*int) * (expr)
   | Let of definition * expr
-  | RLambda of (string * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
+  | RLambda of ( (string * exptype) * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
 and definition =
     Simple of (string* exptype)* expr
   | Sequence of (definition list)

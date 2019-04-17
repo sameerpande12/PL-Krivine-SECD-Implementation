@@ -41,7 +41,7 @@ type expr =
   (**)
   | Project of (int*int) * (expr)
   | Let of definition * expr
-  | RLambda of (string * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
+  | RLambda of ( (string* exptype) * (expr* exptype) * expr) (* fname, (variable of x,type), functionbody*)
 and definition =
     Simple of (string* exptype)* expr
     | Sequence of (definition list)
@@ -85,7 +85,7 @@ let rec compile ex = match ex with
   |Tuple(n,elist)->let fn a b = (compile a) @ b in
     (List.fold_right fn (List.rev elist) [])@[TUPLE(n)]
   |Lambda((V(x),t),e)-> [FABS(x,(compile(e))@[RETURN])]
-  | RLambda(fname,(V(x),t),e)->[RABS(fname,(x,compile(e)@[RETURN])  )]
+  | RLambda( (fname,retType),(V(x),t),e)->[RABS(fname,(x,compile(e)@[RETURN])  )]
                           (*|RecursiveAbs(fname,t,e) -> [RABS(fname,compile(e))]*)
   |App(e1,e2)-> (compile e1)@ (compile e2)@[FCALL]
   | Let(Simple((x,t),e1),e)-> (compile e1)@ [BIND(x,t)] @ (compile e) @ [LET]
