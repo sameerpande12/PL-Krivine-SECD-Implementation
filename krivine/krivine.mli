@@ -55,7 +55,7 @@ and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype 
 type closure = Clos of (expr * table) | Tclos of (closure list) |NULL
 and table = (string * closure )list
 
-type answer  = NumVal of int | BoolVal of bool | TupVal of int * (answer list) | VClos of ((string* expr) * table)
+type answer  = NumVal of int | BoolVal of bool | TupVal of int * (answer list) | VClos of ((string* expr) * table) | RClos of (string  *(string* expr) * table)
 
 type stackElement = CLOSURE of closure | ADD of closure | MULT of closure | AND of closure | OR of closure | NOT | NEGATIVE | ABS| CMP | IFTE of (closure * closure)
                   | TUP of ( closure list * closure list)| PROJ of ( int * int) | DIV of (closure * closure) | REM of (closure * closure) | EQS of (closure * closure)

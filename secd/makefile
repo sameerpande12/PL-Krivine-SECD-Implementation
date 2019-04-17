@@ -3,13 +3,13 @@ all:
 	ocamlc -c a0.ml
 	ocamlc -c secd.mli
 	ocamlc -c secd.ml
-	ocamllex a2.mll
-	ocamlyacc a3.mly
-	ocamlc -c a3.mli
-	ocamlc -c a3.ml
-	ocamlc -c a2.ml
-	ocamlc -c a4.mli
-	ocamlc -c a4.ml
+	ocamllex lexer.mll
+	ocamlyacc parser.mly
+	ocamlc -c parser.mli
+	ocamlc -c parser.ml
+	ocamlc -c lexer.ml
+	ocamlc -c typechecker.mli
+	ocamlc -c typechecker.ml
 
 clean:
-	rm  *.cmo *.cmi a3.mli  a2.ml a3.ml
+	rm  *.cmo *.cmi parser.mli  lexer.ml parser.ml

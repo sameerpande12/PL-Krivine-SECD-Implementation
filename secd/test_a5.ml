@@ -1,14 +1,14 @@
 #load "a0.cmo";;
 #load "secd.cmo";;
-#load "a2.cmo";;
-#load "a3.cmo";;
-#load "a4.cmo";;
+#load "lexer.cmo";;
+#load "parser.cmo";;
+#load "typechecker.cmo";;
 
-#use "a0.ml";;
-#use "secd.ml";;
-#use "a2.ml";;
-#use "a3.ml";;
-#use "a4.ml";;
+open A0;;
+open Secd;;
+open Lexer;;
+open Parser;;
+open Typechecker;;
 
 exception Not_implemented
     (*  (* Helper function to print *)
