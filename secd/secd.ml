@@ -113,44 +113,44 @@ let rec getFromTable x e = match e with
     else getFromTable x e2
 
 
-let rec runSECD stack env opc dump =
+let rec execute stack env opc dump =
   match (stack,env,opc,dump) with
-    ( cl::s, e, [], (s1,e1,c1)::d) -> runSECD (cl::s1) e1 c1 d (*http://www.cse.iitd.ernet.in/~sak/courses/pl/opsem.pdf rules used from here*)
+    ( cl::s, e, [], (s1,e1,c1)::d) -> execute (cl::s1) e1 c1 d (*http://www.cse.iitd.ernet.in/~sak/courses/pl/opsem.pdf rules used from here*)
   | (cl::s,e,[],[])-> cl
-  | ([],e,[],(s1,e1,c1)::d)-> runSECD s1 e1 c1 d
+  | ([],e,[],(s1,e1,c1)::d)-> execute s1 e1 c1 d
   | (s,e,VAR(x)::c,d)->
-        runSECD ((getFromTable x e)::s) e c d
-  | (s,e,(FABS(x,c))::c1,d)->  runSECD ((VClos((x,c),e))::s) e c1 d
-  | (s,e, (RABS(fname,(x,c)))::c1, d ) -> runSECD (RClos(fname,(x,c),e)::s) ((fname,RClos(fname,(x,c),e))::e)  c1 d
-  | (a::s,e, RETURN::c, (s1,e1,c1)::d)-> runSECD (a::s1) e1 c1 d
-  | (a::VClos((x,c),e)::s,e1,FCALL::c1,d) -> runSECD [] ((x,a)::e) c ((s,e1,c1)::d)
-  | (a::RClos(fname,(x,c),e)::s, e1, FCALL::c1,d) -> runSECD [] ((x,a)::(fname,RClos(fname,(x,c),e))::e) c ((s,e1,c1)::d)
+        execute ((getFromTable x e)::s) e c d
+  | (s,e,(FABS(x,c))::c1,d)->  execute ((VClos((x,c),e))::s) e c1 d
+  | (s,e, (RABS(fname,(x,c)))::c1, d ) -> execute (RClos(fname,(x,c),e)::s) ((fname,RClos(fname,(x,c),e))::e)  c1 d
+  | (a::s,e, RETURN::c, (s1,e1,c1)::d)-> execute (a::s1) e1 c1 d
+  | (a::VClos((x,c),e)::s,e1,FCALL::c1,d) -> execute [] ((x,a)::e) c ((s,e1,c1)::d)
+  | (a::RClos(fname,(x,c),e)::s, e1, FCALL::c1,d) -> execute [] ((x,a)::(fname,RClos(fname,(x,c),e))::e) c ((s,e1,c1)::d)
 
-  | (s,e, BCONST(b)::c,d) -> runSECD (B(b)::s)  e c d
-  | (s,e, NCONST(n)::c, d)-> runSECD (Num(n)::s) e c d
-  | ( Num(n)::s,e,ABS::c,d)-> runSECD (Num(abs n)::s) e c d
-  | (Num(n)::s,e, UNARYMINUS::c,d) -> runSECD (Num(minus n)::s) e c d (** []  *)
-  | (B(b)::s,e, NOT::c, d)-> runSECD (B(not b)::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, PLUS::c,d) -> runSECD ((Num(add n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, MINUS::c,d) -> runSECD ((Num(sub n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, MULT::c,d) -> runSECD ((Num(mult n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, DIV::c,d) -> runSECD ((Num(div n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, REM::c,d) -> runSECD ((Num(rem n1 n2))::s) e c d
-  | ( B(b1)::B(b2)::s,e, CONJ::c,d) -> runSECD ((B(b1&&b2))::s) e c d
-  |  ( B(b1)::B(b2)::s,e, DISJ::c,d) -> runSECD ((B(b1||b2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, EQS::c,d) -> runSECD ((B(eq n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, GTE::c,d) -> runSECD ((B(geq n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, LTE::c,d) -> runSECD ((B(leq n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, GT::c,d) -> runSECD ((B(gt n1 n2))::s) e c d
-  | ( Num(n1)::Num(n2)::s,e, LT::c,d) -> runSECD ((B(lt n1 n2))::s) e c d
-  | ( Num(n1)::s,e, CMP::c,d) -> runSECD ((B(gt n1 (mk_big(0)) ))::s) e c d
-  |  (s,e, PAREN::c,d) -> runSECD s e c d
-  |  (B(b)::s, e, COND(c1,c2)::c, d)-> runSECD s e (if b then c1@c else c2@c) d
-  |  (s,e,TUPLE(n)::c,d) ->  runSECD  ((Tup(n, getFirstn s n))::(removeFirstn s n)) e c d
-  |  (Tup(_,alist)::s,e,PROJ(i,n)::c,d)-> runSECD ((List.nth alist (i-1) )::s) e c d
-  |  (a::s,e, BIND(x,t)::c, d) ->  runSECD s ((x,a)::e)  c  d
-  |  (s,e1::e, LET::c,d) -> runSECD s e (c) d
+  | (s,e, BCONST(b)::c,d) -> execute (B(b)::s)  e c d
+  | (s,e, NCONST(n)::c, d)-> execute (Num(n)::s) e c d
+  | ( Num(n)::s,e,ABS::c,d)-> execute (Num(abs n)::s) e c d
+  | (Num(n)::s,e, UNARYMINUS::c,d) -> execute (Num(minus n)::s) e c d (** []  *)
+  | (B(b)::s,e, NOT::c, d)-> execute (B(not b)::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, PLUS::c,d) -> execute ((Num(add n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, MINUS::c,d) -> execute ((Num(sub n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, MULT::c,d) -> execute ((Num(mult n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, DIV::c,d) -> execute ((Num(div n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, REM::c,d) -> execute ((Num(rem n1 n2))::s) e c d
+  | ( B(b1)::B(b2)::s,e, CONJ::c,d) -> execute ((B(b1&&b2))::s) e c d
+  |  ( B(b1)::B(b2)::s,e, DISJ::c,d) -> execute ((B(b1||b2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, EQS::c,d) -> execute ((B(eq n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, GTE::c,d) -> execute ((B(geq n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, LTE::c,d) -> execute ((B(leq n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, GT::c,d) -> execute ((B(gt n1 n2))::s) e c d
+  | ( Num(n1)::Num(n2)::s,e, LT::c,d) -> execute ((B(lt n1 n2))::s) e c d
+  | ( Num(n1)::s,e, CMP::c,d) -> execute ((B(gt n1 (mk_big(0)) ))::s) e c d
+  |  (s,e, PAREN::c,d) -> execute s e c d
+  |  (B(b)::s, e, COND(c1,c2)::c, d)-> execute s e (if b then c1@c else c2@c) d
+  |  (s,e,TUPLE(n)::c,d) ->  execute  ((Tup(n, getFirstn s n))::(removeFirstn s n)) e c d
+  |  (Tup(_,alist)::s,e,PROJ(i,n)::c,d)-> execute ((List.nth alist (i-1) )::s) e c d
+  |  (a::s,e, BIND(x,t)::c, d) ->  execute s ((x,a)::e)  c  d
+  |  (s,e1::e, LET::c,d) -> execute s e (c) d
 
 
   | _ -> raise MachineStuck
-let getAnswer ex tab = runSECD [] tab (compile ex) []
+let getAnswer ex tab = execute [] tab (compile ex) []

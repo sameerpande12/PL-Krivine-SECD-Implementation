@@ -59,7 +59,7 @@ val compile : expr -> opcode list
 val getFirstn : 'a list -> int -> 'a list
 val removeFirstn : 'a list -> int -> 'a list
 val getFromTable : 'a -> ('a * 'b) list -> 'b
-val runSECD :
+val execute :
   answer list ->
   table -> opcode list -> (answer list * table * opcode list) list -> answer
 val getAnswer: expr -> table -> answer
