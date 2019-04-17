@@ -39,10 +39,10 @@ hastype g e Tbool;;
 
 
 let s1 = "\\X:(Tint).(let def A:Tint = X+1 in let def B:Tint = X+3 in if cmp X then A + B else A -B fi end end)"
-let e1 = exp_parser s6 ;;
-hastype g (App(e6,ten)) Tbool;;
-hastype g (App(e6,ten)) Tint;;
-getAnswer (App(e6,ten)) env;;
+let e1 = exp_parser s1 ;;
+hastype g (App(e1,ten)) Tbool;;
+hastype g (App(e1,ten)) Tint;;
+getAnswer (App(e1,ten)) env;;
 
 
 
@@ -118,8 +118,8 @@ let s4 ="let def Y:Tint = 1  in
 
 let e4 = exp_parser s4 ;;
 hastype [] e4 Tint;; (*should give error due to scoping*)
-hastype g e4 Tint;;(*should give error as X is present in the g *)
-
+hastype g e4 Tint;;
+getAnswer e4 env;;(*should 26*)
 
 let s5 = "proj(2,2)(
        if not cmp X
@@ -158,3 +158,20 @@ getFib1 "6";;
 getFib1 "7";;
 getFib1 "8";;
 getFib1 "9";;
+
+
+let s7 = "let def Z:Tint =
+             let def X:Tint =
+                (rec(Fib:Tint)->X:Tint.(if (X=0) \\/ (X = 1) then X else Fib(X-1) + Fib(X-2) fi))(10)
+              in
+                  X
+              end
+
+          in
+              Fib(7)
+          end
+
+" ;;
+let e7 = exp_parser s7;;
+hastype g e Tint;; (*false because scope of Fib ends*)
+(*getAnswer e7 env will give ElementNotFoundException since scope of Fib would have ended*)

@@ -97,7 +97,7 @@ let s3 = "let def X:Tint = 1  in
                 +X
           end";;
 (*to check the scoping*)
-let e3 = exp_parser s3 ;;
+let e3 = exp_parser s3 ;; (*should return 10*)
 hastype [] e3 Tint;; (*should give true *)
 hastype [("X",Tbool)] e3 Tint;; (*should give true*)
 
@@ -116,8 +116,8 @@ let s4 ="let def Y:Tint = 1  in
 
 let e4 = exp_parser s4 ;;
 hastype [] e4 Tint;; (*should give error due to scoping*)
-hastype g e4 Tint;;(*should give error as X is present in the g *)
-
+hastype g e4 Tint;;
+getAnswer e4 env;;(*should 26*)
 
 let s5 = "proj(2,2)(
        if  cmp X
@@ -146,6 +146,24 @@ let s6= " rec(Fib1:Tint)->X:Tint.(
 "
 let fib1 = exp_parser s6 ;;
 let getFib1 x = getAnswer (App(fib1,exp_parser x )) env;;
+
+
+let s7 = "let def Z:Tint =
+             let def X:Tint =
+                (rec(Fib:Tint)->X:Tint.(if (X=0) \\/ (X = 1) then X else Fib(X-1) + Fib(X-2) fi))(10)
+              in
+                  X
+              end
+
+          in
+              Fib(7)
+          end
+
+" ;;
+let e7 = exp_parser s7;;
+hastype [] e Tint;; (*gives false since scope of Fib ends*)
+(*getAnswer e7 [] gives error*)
+
 getFib1 "0";;
 getFib1 "1";;
 getFib1 "2";;

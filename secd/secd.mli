@@ -52,7 +52,7 @@ and table = (string * answer) list
 and opcode = VAR of string | NCONST of bigint | BCONST of bool | ABS | UNARYMINUS | NOT
            | PLUS | MINUS | MULT | DIV | REM | CONJ | DISJ | EQS | GTE | LTE | GT | LT | CMP
            | PAREN | COND of (opcode list * opcode list) | TUPLE of int | PROJ of int*int | LET  | FABS of string * (opcode list) | FCALL | RETURN | BIND of (string * exptype)
-           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list))
+           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list)) | TEL
 
 
 val compile : expr -> opcode list

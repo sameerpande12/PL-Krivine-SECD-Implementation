@@ -53,11 +53,11 @@ and  exptype = Tint | Tbool | Tfunc of (exptype * exptype) | Ttuple of (exptype 
 
 
 type answer = B of bool | Num of bigint | Tup of int * (answer list) | VClos of ( ( string* (opcode list)) * table ) | RClos of ( string *( string* (opcode list)) * table ) (*| RClos of (string* (string* (opcode list)* table)) *)
-and table = (string * answer) list
+and table = (string * answer) list                               (*VClos ((x,opcode list),table)*)                                                                     (*RClos used to return recursion function:  RCLos (fun_name,(input_variable, opcode list), table ) *)
 and opcode = VAR of string | NCONST of bigint | BCONST of bool | ABS | UNARYMINUS | NOT
             | PLUS | MINUS | MULT | DIV | REM | CONJ | DISJ | EQS | GTE | LTE | GT | LT | CMP
            | PAREN | COND of (opcode list * opcode list) | TUPLE of int | PROJ of int*int | LET  | FABS of string * (opcode list) | FCALL | RETURN | BIND of (string * exptype)
-           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list))
+           | SIMPLEDEF of string * (opcode list) | SEQCOMPOSE | PARCOMPOSE | LOCALDEF| RABS of string * (string * (opcode list)) | TEL
 
 let rec compile ex = match ex with
     Bool(b)-> [BCONST(b)]
@@ -88,26 +88,26 @@ let rec compile ex = match ex with
   | RLambda( (fname,retType),(V(x),t),e)->[RABS(fname,(x,compile(e)@[RETURN])  )]
                           (*|RecursiveAbs(fname,t,e) -> [RABS(fname,compile(e))]*)
   |App(e1,e2)-> (compile e1)@ (compile e2)@[FCALL]
-  | Let(Simple((x,t),e1),e)-> (compile e1)@ [BIND(x,t)] @ (compile e) @ [LET]
+  | Let(Simple((x,t),e1),e)-> [TEL]@(compile e1)@ [BIND(x,t)] @ (compile e) @ [LET]
   | Lambda(_,e)-> raise Invalid_Parameter
   | RLambda(_,_,e)-> raise Invalid_Parameter
   | Let(_,e)-> raise Invalid_Parameter
 
-let rec getFirstn mlist n =
+let rec getFirstn mlist n =(*returns list of first n memebers of list*)
   if n = 0 then []
   else if n < 0 then raise Invalid_Parameter
   else match mlist with
       [] -> raise Invalid_Parameter
     | m::m1 -> m::(getFirstn m1 (n-1))
 
-let rec removeFirstn mlist n =
+let rec removeFirstn mlist n =(*returns list after removing first n paramets*)
   if n = 0 then mlist
   else if n<0 then raise Invalid_Parameter
   else match mlist with
       [] -> raise Invalid_Parameter
     | m::m1 -> removeFirstn (m1) (n-1)
 
-let rec getFromTable x e = match e with
+let rec getFromTable x e = match e with (*returns first value assoicated with string x in table*)
     []-> raise VariableNotFound
   | e1::e2 -> if x = fst e1 then snd e1
     else getFromTable x e2
@@ -121,7 +121,7 @@ let rec execute stack env opc dump =
   | (s,e,VAR(x)::c,d)->
         execute ((getFromTable x e)::s) e c d
   | (s,e,(FABS(x,c))::c1,d)->  execute ((VClos((x,c),e))::s) e c1 d
-  | (s,e, (RABS(fname,(x,c)))::c1, d ) -> execute (RClos(fname,(x,c),e)::s) ((fname,RClos(fname,(x,c),e))::e)  c1 d
+  | (s,e, (RABS(fname,(x,c)))::c1, d ) -> execute (RClos(fname,(x,c),e)::s) ((fname,RClos(fname,(x,c),e))::e)  c1 d (*binding function to itself*)
   | (a::s,e, RETURN::c, (s1,e1,c1)::d)-> execute (a::s1) e1 c1 d
   | (a::VClos((x,c),e)::s,e1,FCALL::c1,d) -> execute [] ((x,a)::e) c ((s,e1,c1)::d)
   | (a::RClos(fname,(x,c),e)::s, e1, FCALL::c1,d) -> execute [] ((x,a)::(fname,RClos(fname,(x,c),e))::e) c ((s,e1,c1)::d)
@@ -129,7 +129,7 @@ let rec execute stack env opc dump =
   | (s,e, BCONST(b)::c,d) -> execute (B(b)::s)  e c d
   | (s,e, NCONST(n)::c, d)-> execute (Num(n)::s) e c d
   | ( Num(n)::s,e,ABS::c,d)-> execute (Num(abs n)::s) e c d
-  | (Num(n)::s,e, UNARYMINUS::c,d) -> execute (Num(minus n)::s) e c d (** []  *)
+  | (Num(n)::s,e, UNARYMINUS::c,d) -> execute (Num(minus n)::s) e c d (*substraction seen as addtion of negative of operand 2 to operand 1*)
   | (B(b)::s,e, NOT::c, d)-> execute (B(not b)::s) e c d
   | ( Num(n1)::Num(n2)::s,e, PLUS::c,d) -> execute ((Num(add n1 n2))::s) e c d
   | ( Num(n1)::Num(n2)::s,e, MINUS::c,d) -> execute ((Num(sub n1 n2))::s) e c d
@@ -148,8 +148,9 @@ let rec execute stack env opc dump =
   |  (B(b)::s, e, COND(c1,c2)::c, d)-> execute s e (if b then c1@c else c2@c) d
   |  (s,e,TUPLE(n)::c,d) ->  execute  ((Tup(n, getFirstn s n))::(removeFirstn s n)) e c d
   |  (Tup(_,alist)::s,e,PROJ(i,n)::c,d)-> execute ((List.nth alist (i-1) )::s) e c d
-  |  (a::s,e, BIND(x,t)::c, d) ->  execute s ((x,a)::e)  c  d
-  |  (s,e1::e, LET::c,d) -> execute s e (c) d
+  |  (a::s,e, BIND(x,t)::c, (s1,e1,c1)::d) ->  execute s ((x,a)::e1)  c  d
+  | (s,e,TEL::c,d) -> execute s e c  ((s,e,c)::d)
+  |  (s,e1::e, LET::c,d) -> execute s e (c) d (*remove hd of table to account for scoping*)
 
 
   | _ -> raise MachineStuck

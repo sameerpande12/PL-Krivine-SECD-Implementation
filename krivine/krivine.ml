@@ -282,35 +282,38 @@ let rec runKrivine clos stack =  match clos with
   | Clos(Plus(e1,e2),gamma) ->
     (*Printf.printf "69\n";*)
     runKrivine (Clos(e1,gamma)) ((ADD(Clos(e2,gamma)))::stack)
+(*concentrate on CLos(e1,gamma) till you reduce it to form of Clos(Integer(n),gamma). Then you check if on top of the stack if you have ADD(CLos(Integer(m),gamma)) then you directly add them
+  otherwise you just swap closure in focus and closure inside ADD. Hence next time you complete evaluation of Clos(e2,gamma) you are bound to have ADD(Clos(Integer(n),gamma)) on the top of the stack*)
   | Clos(Sub(e1,e2),gamma)->
     (*Printf.printf "70\n";*)
     runKrivine (Clos(e1, gamma))  ((ADD(Clos(Negative(e2),gamma)))::stack)
   | Clos(Mult(e1,e2),gamma)->(*Printf.printf "71\n";*)
-    runKrivine (Clos(e1,gamma))  ((MULT(Clos(e2,gamma)))::stack)
+    runKrivine (Clos(e1,gamma))  ((MULT(Clos(e2,gamma)))::stack)(*same logic as ADD*)
   | Clos(Div(e1,e2),gamma)->(*Printf.printf "72\n";*)
-    runKrivine (Clos(e1,gamma)) ((DIV(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((DIV(NULL,Clos(e2,gamma))) :: stack)(*First you focus on the first parameter e1 and put on top of the stack DIV(NULL,...). After evaluating first closure you put in as first element of DIV and put second element of DIV as NULL
+                                                                       when you encounter DIV(--,NULL):: after evaluation of second closure just perfrom the division*)
   | Clos(Rem(e1,e2),gamma)->(*Printf.printf "73\n";*)
-    runKrivine (Clos(e1,gamma)) ((REM(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((REM(NULL,Clos(e2,gamma))) :: stack)(*Similar to DIV*)
 
   | Clos(Equals(e1,e2),gamma)->(*Printf.printf "74\n";*)
-    runKrivine (Clos(e1,gamma)) ((EQS(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((EQS(NULL,Clos(e2,gamma))) :: stack)(*Similar to DIV*)
   | Clos(GreaterTE(e1,e2),gamma)->(*Printf.printf "75\n";*)
-    runKrivine (Clos(e1,gamma)) ((GTE(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((GTE(NULL,Clos(e2,gamma))) :: stack)(*Similar to DIV*)
   | Clos(GreaterT(e1,e2),gamma)->(*Printf.printf "76\n";*)
-    runKrivine (Clos(e1,gamma)) ((GT(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((GT(NULL,Clos(e2,gamma))) :: stack)(*Similar to DIV*)
 
-  | Clos(LessTE(e1,e2),gamma)->(*Printf.printf "77\n";*)
+  | Clos(LessTE(e1,e2),gamma)->(*Printf.printf "77\n";*)(*Similar to DIV*)
     runKrivine (Clos(e1,gamma)) ((LTE(NULL,Clos(e2,gamma))) :: stack)
   | Clos(LessT(e1,e2),gamma)->(*Printf.printf "78\n";*)
-    runKrivine (Clos(e1,gamma)) ((LT(NULL,Clos(e2,gamma))) :: stack)
+    runKrivine (Clos(e1,gamma)) ((LT(NULL,Clos(e2,gamma))) :: stack)(*Similar to DIV*)
 
   | Clos(Negative(e),gamma) ->(*Printf.printf "79\n";*)
     runKrivine (Clos(e, gamma)) (NEGATIVE::stack)
   | Clos(Abs(e),gamma) ->(*Printf.printf "80\n";*)
     runKrivine (Clos(e,gamma)) (ABS::stack)
-  | Clos(And(e1,e2),gamma)->(*Printf.printf "81\n";*)
+  | Clos(And(e1,e2),gamma)->(*Printf.printf "81\n";*)(*Similar to ADD*)
     runKrivine (Clos(e1,gamma)) ((AND(Clos(e2,gamma)))::stack)
-  | Clos(Or(e1,e2),gamma)->(*Printf.printf "82\n";*)
+  | Clos(Or(e1,e2),gamma)->(*Printf.printf "82\n";*)(*Similar to ADD*)
     runKrivine (Clos(e1,gamma)) ((OR(Clos(e2,gamma)))::stack)
   | Clos(Not(e),gamma) ->(*Printf.printf "83\n";*)
     runKrivine (Clos(e,gamma)) (NOT::stack)
@@ -318,7 +321,7 @@ let rec runKrivine clos stack =  match clos with
     runKrivine (Clos(e,gamma)) (CMP::stack)
 
   | Clos(If_Then_Else(e0,e1,e2),gamma)->(*Printf.printf "85\n";*)
-    runKrivine (Clos(e0,gamma)) ((IFTE(Clos(e1,gamma),Clos(e2,gamma)))::stack)
+    runKrivine (Clos(e0,gamma)) ((IFTE(Clos(e1,gamma),Clos(e2,gamma)))::stack)(*Just choose depending on the value e0 closure evaluates to*)
   | Clos(Tuple(n,elist),gamma)->(*Printf.printf "86\n";*)
 
     runKrivine (Clos(List.hd elist,gamma))   ((TUP( [] ,List.map (makeClosure gamma) elist))::stack) (*TUP(l1,l2) the head of l2 is the main closure that is being evaluated now and l1 is list of evaluated closures in reverse order*)
